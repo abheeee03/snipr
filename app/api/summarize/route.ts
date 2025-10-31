@@ -41,7 +41,7 @@ The "time" value must correspond to a meaningful key moment in the transcript (e
 Do not add comments or explanations.
 Do not include any markdown formatting.
 The output must always be well-formed JSON only.
-
+the time should in the same format as in the transcript, DONT NOT CHANGE IT JUST RETURN AS IS IT from transcript.
   Transcript:
   ${text}
   `;
