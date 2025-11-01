@@ -12,3 +12,26 @@ export interface TranscriptResponse {
 }
 
 export type PageStateType = "loading_summary" | "loading_transcript" | "error" | "ready"
+
+
+
+
+// db items
+export type VideoHistory = {
+  id: string;
+  userID: string;
+  videoID: string;
+  saved_at: string;
+}
+
+export type VideoData = {
+  id: string;
+  summary: string;
+  suggested_clips: {
+    title: string;
+    time: string;
+  }[];
+  transcript: TranscriptResponse;
+  fetched_at: string;
+  videoID: string;
+}

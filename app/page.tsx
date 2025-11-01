@@ -8,14 +8,31 @@ import Logo from '@/components/logo'
 import { ArrowUpRight } from 'lucide-react'
 import { IoLogoYoutube } from 'react-icons/io'
 import FooterComponent from '@/components/footer'
+import AuthScreen from '@/components/AuthScreen'
+import { createClient } from '@/lib/supabase/client'
+import type { User } from '@supabase/supabase-js'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu'
+import { DropdownMenuTrigger } from '@radix-ui/react-dropdown-menu'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { BiSolidVideos } from "react-icons/bi";
+import { CiLogout } from "react-icons/ci";
 
 function LandingPage() {
   const [url, seturl] = useState("")
   const [mounted, setMounted] = useState(false)
   const router = useRouter()
+  const [user, setuser] = useState<User | null>(null)
+  const [authScreen, setAuthScreen] = useState<boolean>(false)
+  const supabase = createClient()
+
+  const getUser = async ()=>{
+    const {data: {user}} = await supabase.auth.getUser()
+    setuser(user)
+  }
 
   useEffect(() => {
     setMounted(true)
+    getUser()
   }, [])
   
 
@@ -34,9 +51,57 @@ function LandingPage() {
       <Button className='hidden md:flex' variant={"secondary"}>
         Download Chrome Extension
       </Button>
-      <Button>
+      {
+        !user ?
+        <Button
+        onClick={()=>{
+          setAuthScreen(!authScreen)
+        }}
+        >
         Signin
-      </Button>
+      </Button> : <DropdownMenu>
+        <DropdownMenuTrigger 
+        className='cursor-pointer'
+        asChild>
+          <Avatar>
+            <AvatarImage
+            src={user.user_metadata.picture}
+            />
+            <AvatarFallback>
+              {user.user_metadata?.full_name?.charAt(0).toUpperCase()}
+            </AvatarFallback>
+          </Avatar>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align={"end"}>
+          <DropdownMenuItem>
+            <button 
+            onClick={()=>{
+              router.push('/your-videos')
+            }}
+            className='flex items-center justify-center gap-2'>
+            <BiSolidVideos />
+            Summarized Videos
+            </button>
+          </DropdownMenuItem>
+          <DropdownMenuItem>
+            <button 
+            onClick={async()=>{
+              await supabase.auth.signOut()
+              setuser(null)
+              toast.success("Logged Out Successfully")
+            }}
+            className='flex items-center justify-center gap-2'>
+            <CiLogout />
+            Log Out
+            </button>
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+      }
+      <AuthScreen
+      open={authScreen}
+      onOpenChange={setAuthScreen}
+      />
       </div>
     </div>
     <div className='h-screen py-40 px-10 w-full bg-secondary flex flex-col items-center justify-start gap-15'>

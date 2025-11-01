@@ -10,9 +10,9 @@ import ReactPlayer from 'react-player'
 import Spinner from '@/components/ui/spinner'
 import ShimmerText from '@/components/kokonutui/shimmer-text'
 import NavBar from '@/components/nav'
-import Link from 'next/link'
-import { FaGithub } from "react-icons/fa6";
 import FooterComponent from '@/components/footer'
+import { createClient } from '@/lib/supabase/client'
+import { User } from '@supabase/supabase-js'
 
 type SummaryResponseType = {
   summary: string;
@@ -26,63 +26,120 @@ function AnalyzeVideo() {
   const [transcript, setTranscript] = useState<TranscriptResponse | null>(null)
   const [summary, setSummary] = useState<SummaryResponseType | null>(null)
   const [error, setError] = useState<string | null>(null)
-  const [mounted, setmounted] = useState(false);
+  const [mounted, setmounted] = useState(false)
   const [pageState, setPageState] = useState<PageStateType>("loading_transcript")
+
+  const supabase = createClient()
+  const [user, setUser] = useState<User | null>(null)
+
   const { id } = useParams()
   const router = useRouter()
+
   const playerRef = useRef<HTMLVideoElement>(null)
   const setPlayerRef = useCallback((player: HTMLVideoElement) => {
-    if (!player) return;
-    playerRef.current = player;
-    console.log(player);
-  }, []);
+    if (!player) return
+    playerRef.current = player
+  }, [])
 
+  // ✅ FIXED: Use userID directly when inserting history
+  const saveVideoToDB = async (
+    summaryProp: SummaryResponseType,
+    transcriptProp: TranscriptResponse,
+    userID: string
+  ) => {
+    const { data, error } = await supabase
+      .from('videos')
+      .insert([
+        {
+          videoID: id,
+          transcript: JSON.stringify(transcriptProp),
+          summary: summaryProp.summary,
+          suggested_clips: JSON.stringify(summaryProp.suggestedClips)
+        }
+      ])
+      .select()
 
-  const fetchVideoDetails = async () => {
-    try {
-      const response = await axios.post(`/api/transcribe`, {
-        videoId: id
-      })
-      const data = await response.data
-      setTranscript(data.transcript)
-      console.log("transcript data from api: ", data.transcript);
-      const plainText = JSON.stringify(data.transcript.content);
-      console.log("plain txt: ", plainText);
-      if (data) {
-        setPageState("loading_summary")
-        const summaryData = await axios.post(`/api/summarize`, {
-          text: plainText
-        })
-        setSummary(summaryData.data)
-        console.log(summaryData.data);
-        setPageState("ready")
-      }
-    } catch (err) {
+    if (error) {
+      console.log("Error saving video:", error)
+      return
+    }
 
-      setPageState("error")
-      console.log(err);
-      setError("Failed to fetch the video details try again later.")
-      toast.error("failed to fetch video details")
+    console.log("Video saved:", data)
+
+    if (userID && data?.length > 0) {
+      const { data: historyData, error: historyError } = await supabase
+        .from("video_history")
+        .insert([
+          {
+            userID,
+            videoID: data[0].id
+          }
+        ])
+        .select()
+
+      console.log("History:", historyData, historyError)
     }
   }
 
+  const fetchVideoDetails = async (userID: string) => {
+    try {
+      const response = await axios.post(`/api/transcribe`, { videoId: id })
+      const data = response.data
 
-  const msToSeconds = (ms: number) => ms / 1000;
+      setTranscript(data.transcript)
 
-  function seekPlayer(time: string) {
-    const timing = msToSeconds(Number(time))
-    console.log(timing);
-    if (!playerRef.current) { return }
-    playerRef.current.currentTime = Number(timing);
+      setPageState("loading_summary")
+
+      const plainText = JSON.stringify(data.transcript.content)
+      const summaryData = await axios.post(`/api/summarize`, { text: plainText })
+
+      setSummary(summaryData.data)
+
+      await saveVideoToDB(summaryData.data, data.transcript, userID)
+
+      setPageState("ready")
+    } catch (err) {
+      setPageState("error")
+      setError("Failed to fetch video details try again later.")
+      toast.error("Failed to fetch video details")
+    }
+  }
+
+  const handleLoadVideo = async () => {
+    const userSession = await supabase.auth.getUser()
+    const currentUser = userSession.data.user
+    setUser(currentUser)
+
+    const { data: DBVideoData } = await supabase
+      .from('videos')
+      .select('*')
+      .eq('videoID', id)
+
+    if (DBVideoData && DBVideoData.length > 0) {
+      setSummary({
+        summary: DBVideoData[0].summary,
+        suggestedClips: JSON.parse(DBVideoData[0].suggested_clips)
+      })
+      setTranscript(JSON.parse(DBVideoData[0].transcript))
+      setPageState("ready")
+      return
+    }
+
+    await fetchVideoDetails(currentUser?.id as string)
   }
 
   useEffect(() => {
     setmounted(true)
-    fetchVideoDetails()   
-    
+    handleLoadVideo()
   }, [])
 
-  if (!mounted) { return null }
+  if(!mounted) return null;
+
+    const seekPlayer = (time: string) => {
+        const seconds = Number(time) / 1000
+        if (!playerRef.current) return
+        playerRef.current.currentTime = seconds
+    }
 
   if (pageState == "loading_transcript") {
     return <div className="h-screen w-full text-center flex items-center justify-center gap-3">
