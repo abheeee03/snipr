@@ -1,12 +1,13 @@
 "use client"
-import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { extractVideoId } from '@/lib/utils'
 import { toast } from 'sonner'
 import Logo from '@/components/logo'
-import { ArrowUpRight, RocketIcon, YoutubeIcon } from 'lucide-react'
+import { ArrowUpRight } from 'lucide-react'
+import { IoLogoYoutube } from 'react-icons/io'
+import FooterComponent from '@/components/footer'
 
 function LandingPage() {
   const [url, seturl] = useState("")
@@ -22,7 +23,7 @@ function LandingPage() {
 
   return (
     <>
-    <div className="fixed w-full px-10 py-4 flex items-center justify-between">
+    <div className="fixed w-full px-5 md:px-10 py-4 flex items-center justify-between">
       <div className="flex items-center justify-center gap-2">
       <Logo
       size='lg'
@@ -30,7 +31,7 @@ function LandingPage() {
       <h1 className='text-2xl font-semibold'>Snipr</h1>
       </div>
       <div className="flex items-center justify-center gap-5">
-      <Button variant={"secondary"}>
+      <Button className='hidden md:flex' variant={"secondary"}>
         Download Chrome Extension
       </Button>
       <Button>
@@ -38,25 +39,24 @@ function LandingPage() {
       </Button>
       </div>
     </div>
-    <div className='h-screen w-full flex items-center justify-center'>
+    <div className='h-screen py-40 px-10 w-full bg-secondary flex flex-col items-center justify-start gap-15'>
       <div className="text-center max-w-3xl flex flex-col gap-3">
-        <h1 className='text-5xl'>Snipr</h1>
-        <p className='text-md'>Consume 1 hour video in 5 minutes</p>
+        <h1 className='text-6xl font-semibold'>Snipr</h1>
+        <p className='text-md max-w-lg'>Turn hour-long videos into quick, crystal-clear takeaways so you can learn faster without watching every second.</p>
+      </div>
         <div className="flex gap-3">
-            <div className="border px-2 py-1 rounded-md flex items-center justify-start gap-3">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" className="bi bi-youtube" viewBox="0 0 16 16">
-              <path d="M8.051 1.999h.089c.822.003 4.987.033 6.11.335a2.01 2.01 0 0 1 1.415 1.42c.101.38.172.883.22 1.402l.01.104.022.26.008.104c.065.914.073 1.77.074 1.957v.075c-.001.194-.01 1.108-.082 2.06l-.008.105-.009.104c-.05.572-.124 1.14-.235 1.558a2.01 2.01 0 0 1-1.415 1.42c-1.16.312-5.569.334-6.18.335h-.142c-.309 0-1.587-.006-2.927-.052l-.17-.006-.087-.004-.171-.007-.171-.007c-1.11-.049-2.167-.128-2.654-.26a2.01 2.01 0 0 1-1.415-1.419c-.111-.417-.185-.986-.235-1.558L.09 9.82l-.008-.104A31 31 0 0 1 0 7.68v-.123c.002-.215.01-.958.064-1.778l.007-.103.003-.052.008-.104.022-.26.01-.104c.048-.519.119-1.023.22-1.402a2.01 2.01 0 0 1 1.415-1.42c.487-.13 1.544-.21 2.654-.26l.17-.007.172-.006.086-.003.171-.007A100 100 0 0 1 7.858 2zM6.4 5.209v4.818l4.157-2.408z"/>
-            </svg>
+            <div className="shadow-lg px-2 py-1 rounded-lg flex items-center justify-start gap-3 bg-white border-t">
+            <IoLogoYoutube size={20} className='mx-1'/>
             <input
             onChange={(e)=>{
               seturl(e.target.value)
             }}
               type="text"
-              className="px-1 w-70 outline-none focus:outline-none focus:ring-0 focus:border-transparent"
+              className="py-2 w-70 outline-none focus:outline-none focus:ring-0 focus:border-transparent"
               placeholder="Enter Youtube URL"
             />
-            </div>
-          <Button
+            <Button
+            disabled={url.length != 0 ? false : true}
           onClick={()=>{
               const extractedUrl = extractVideoId(url)
               if(extractedUrl){
@@ -66,11 +66,13 @@ function LandingPage() {
               }
           }}
           >
-            Generate <ArrowUpRight/>
+            <ArrowUpRight/>
           </Button>
+            </div>
         </div>
-      <div className="">abheeeeeeeeeee</div>
-      </div>
+    </div>
+    <div className="bg-secondary py-5">
+      <FooterComponent/>
     </div>
         </>
   )

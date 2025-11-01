@@ -12,6 +12,7 @@ import ShimmerText from '@/components/kokonutui/shimmer-text'
 import NavBar from '@/components/nav'
 import Link from 'next/link'
 import { FaGithub } from "react-icons/fa6";
+import FooterComponent from '@/components/footer'
 
 type SummaryResponseType = {
   summary: string;
@@ -20,9 +21,6 @@ type SummaryResponseType = {
     time: string;
   }>
 }
-
-
-
 
 function AnalyzeVideo() {
   const [transcript, setTranscript] = useState<TranscriptResponse | null>(null)
@@ -81,6 +79,7 @@ function AnalyzeVideo() {
   useEffect(() => {
     setmounted(true)
     fetchVideoDetails()   
+    
   }, [])
 
   if (!mounted) { return null }
@@ -129,15 +128,16 @@ function AnalyzeVideo() {
     {
       id: 1,
       label: "Transcript",
-      content: <div className="">
-        <div className='px-4 py-4 bg-muted rounded-xl'>
-          {
-            transcript ? transcript.content.map((item, idx)=>{
-              return <p key={idx}>{item.text}</p>
-            }) : <div className="">Something went wrong...</div>
-          }
-        </div>
-      </div>
+      content:<div className="px-4 py-4 bg-muted rounded-xl h-full">
+                <div className="h-100 overflow-y-auto scrollbar-hide space-y-2">
+                    {transcript
+                    ? transcript.content.map((item, idx) => (
+                        <p key={idx}>{item.text}</p>
+                        ))
+                    : <div>Something went wrong...</div>
+                    }
+                </div>
+            </div>
     },
     {
       id: 2,
@@ -153,13 +153,13 @@ function AnalyzeVideo() {
     return (
       <>
       <NavBar/>
-      <div className='h-screen pt-15 px-8 w-full flex items-start justify-between gap-5'>
-        <div className="w-full h-screen flex flex-col gap-3 overflow-y-auto scrollbar-hide">
+      <div className='md:h-screen min-h-screen pt-15 px-8 w-full flex md:flex-row flex-col items-start justify-between gap-5'>
+        <div className="w-full">
           <DirectionAwareTabs
             tabs={items}
           />
         </div>
-        <div className="h-full scrollbar-hide w-full overflow-y-auto">
+        <div className="h-full scrollbar-hide w-full md:overflow-y-auto">
           <div className="rounded-xl h-100">
             <ReactPlayer
               ref={setPlayerRef}
@@ -191,17 +191,9 @@ function AnalyzeVideo() {
           </div>
         </div>
       </div>
-        <div className="flex w-full items-center justify-between px-20">
-          <h1 className='text-xl font-semibold'> 
-             Snipr
-          </h1>
-          <div className="flex gap-3">
-            <span>Support Us On</span>
-            <Link href={'https://github.com/abheeee03/snipr'}>
-              <FaGithub size={24}/>           
-            </Link>
-          </div>
-        </div>
+      <div className="py-5">
+      <FooterComponent/>
+      </div>
       </>
     )
   }
