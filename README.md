@@ -1,36 +1,120 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 🎬 Snipr
 
-## Getting Started
+> *Turn hour-long videos into 5 mins summary* 🧠
 
-First, run the development server:
+[![Next.js](https://img.shields.io/badge/Next.js-15-black?logo=next.js)](https://nextjs.org)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5-blue?logo=typescript)](https://typescriptlang.org)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind-3-38bdf8?logo=tailwindcss)](https://tailwindcss.com)
+[![Supabase](https://img.shields.io/badge/Supabase-Backend-3ecf8e?logo=supabase)](https://supabase.com)
+
+## 🔥 What's this about?
+
+Tired of watching 2-hour YouTube videos just to get the main points? Same bestie, same. **Snipr** is here to rescue your attention span! 
+
+Drop any YouTube URL and we'll:
+- 📝 Generate crystal-clear summaries
+- ⏰ Extract suggested clips with timestamps
+- 🤖 chat with that video
+- 🎯 Help you learn faster without the fluff
+
+No cap, this will change how you consume content! 
+
+## 🚀 Quick Start (it's giving efficiency)
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
+# Clone 
+git clone https://github.com/abheeee03/snipr.git
+cd snipr
+
+# Install (we're using pnpm because it hits different)
+pnpm install
+
+# start dev server
 pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000)
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 🛠️ Tech Stack
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- **Next.js 15**
+- **TypeScript** 
+- **Tailwind CSS**
+- **Supabase** 
+- **Shadcn/ui** 
+- **Gemini API**
+- **Upstash Redis**
+- **SupData**
 
-## Learn More
+## 🎨 Features that go hard
 
-To learn more about Next.js, take a look at the following resources:
+- 🎥 **YouTube Integration** - Paste any YT link, we got you
+- 📊 **Smart Summaries** - AI-powered content breakdown
+- 🎯 **Timestamp Navigation** - Jump to the good parts instantly
+- 🎯 **Chat With Video** - Talk with the Video Like Human
+- 👤 **User Accounts** - Track your summarized videos
+- 📱 **Responsive Design** - Looks fire on any device
+- ⚡ **Rate Limiting** - Fair usage for everyone
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 🏗️ Project Structure (organized chaos)
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```
+snipr/
+├── app/                    # Next.js App Router (the new hotness)
+│   ├── analyze/[id]/      # Video analysis page
+│   ├── your-videos/       # User's video history
+│   └── api/               # Backend endpoints
+├── components/            # Reusable UI components
+│   ├── ui/               # Shadcn components
+│   └── kokonutui/        # Extra spicy animations
+├── lib/                  # Utilities and helpers
+└── public/               # Static assets
+```
 
-## Deploy on Vercel
+## 🎯 How to contribute 
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+1. Fork this repo
+2. Create a branch (`git checkout -b feature/amazing-thing`)
+3. Make your changes (make them count!)
+4. Commit (`git commit -m "add: some fire feature"`)
+5. Push (`git push origin feature/amazing-thing`)
+6. Open a PR (we love good contributions!)
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## 🌟 Roadmap (what's coming next)
+
+- [ ] AI Chat with videos (in progress)
+- [ ] Chrome extension
+- [ ] More video platforms support
+
+## 📝 Environment Variables (the secret sauce)
+
+Create a `.env.local` file:
+
+```env
+# Supabase
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+
+# AI
+OPENAI_API_KEY=your_openai_key
+SUPDATA_API_KEY
+
+# YouTube API (optional)
+YOUTUBE_API_KEY=your_youtube_key
+
+#redis
+UPSTASH_REDIS_REST_TOKEN
+UPSTASH_REDIS_REST_URL
+```
+
+## 🤝 Built with 💖 by
+
+[@abheeee03](https://github.com/abheeee03) - Your friendly neighborhood developer
+
+## 📄 License
+
+MIT License - Use it, love it, make it better!
+
+---
+
+*Remember: Life's too short for long videos. Snipr it! 🎬✂️*
