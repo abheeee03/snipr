@@ -4,7 +4,7 @@ import { DirectionAwareTabs } from '@/components/ui/direction-aware-tabs'
 import { PageStateType, TranscriptResponse } from '@/lib/types'
 import axios from 'axios'
 import { useParams, useRouter } from 'next/navigation'
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState, useMemo } from 'react'
 import { toast } from 'sonner'
 import ReactPlayer from 'react-player'
 import Spinner from '@/components/ui/spinner'
@@ -12,7 +12,7 @@ import ShimmerText from '@/components/kokonutui/shimmer-text'
 import NavBar from '@/components/nav'
 import FooterComponent from '@/components/footer'
 import { createClient } from '@/lib/supabase/client'
-import { checkUserLimit } from '@/lib/utils'
+import Chat from '@/components/Chat'
 
 type SummaryResponseType = {
   summary: string;
@@ -28,7 +28,7 @@ function AnalyzeVideo() {
   const [mounted, setmounted] = useState(false)
   const [pageState, setPageState] = useState<PageStateType>("loading_transcript")
 
-  const supabase = createClient()
+  const supabase = useMemo(() => createClient(), [])
 
   const {id} = useParams()
   const router = useRouter()
@@ -108,15 +108,6 @@ function AnalyzeVideo() {
       setmounted(true)
       const userSession = await supabase.auth.getUser()
       const currentUser = userSession.data.user 
-      const isLimited = await checkUserLimit()
-      
-      if(!isLimited && currentUser?.is_anonymous){
-        router.push('/?limit=anon')
-      }
-  
-      if(!isLimited && !currentUser?.is_anonymous){
-        router.push('/?limit=auth')
-      }
   
       const { data: DBVideoData } = await supabase
         .from('videos')
@@ -204,8 +195,8 @@ function AnalyzeVideo() {
     {
       id: 2,
       label: "Ask AI",
-      content: <div className="">
-        <p className='px-4 py-4 bg-muted rounded-xl'>Comming Soon...</p>
+      content: <div className="h-[500px]">
+        <Chat transcript={transcript} />
       </div>
     }
 

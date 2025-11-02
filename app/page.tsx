@@ -1,8 +1,8 @@
 "use client"
 import { Button } from '@/components/ui/button'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { useEffect, useState, Suspense } from 'react'
-import { checkUserLimit, extractVideoId, updateLimit } from '@/lib/utils'
+import { useEffect, useState, Suspense, useMemo, useRef } from 'react'
+import { checkUserLimit, extractVideoId, handelSignin, updateLimit } from '@/lib/utils'
 import { toast } from 'sonner'
 import Logo from '@/components/logo'
 import { ArrowUpRight } from 'lucide-react'
@@ -28,25 +28,28 @@ function LandingPage() {
   const [limitAnonScreen, setLimitAnonScreen] = useState(false)
   const [limitAuthScreen, setLimitAuthScreen] = useState(false)
   const [loading, setloading] = useState(false)
-  const supabase = createClient()
+  const supabase = useMemo(() => createClient(), [])
   const searchParams = useSearchParams()
-
-
+  const userInitialized = useRef(false)
 
   useEffect(() => {
     const getUser = async ()=>{
-    setMounted(true)
-    const {data: {user}} = await supabase.auth.getUser()
-    if(user){
-      setuser(user)
-    } else {
-      const {data: {user: AnonUser}} = await supabase.auth.signInAnonymously()
-      setuser(AnonUser)   
+      if (userInitialized.current) return
+      
+      setMounted(true)
+      const {data: {user}} = await supabase.auth.getUser()
+      if(user){
+        setuser(user)
+        userInitialized.current = true
+      } else {
+        const {data: {user: AnonUser}} = await supabase.auth.signInAnonymously()
+        setuser(AnonUser)
+        userInitialized.current = true
+      }
     }
-  }
     getUser()
+    
     function checkModalFromParams(){
-
       if(searchParams.get('limit') === 'anon'){
         setLimitAnonScreen(true)
       }
@@ -55,7 +58,14 @@ function LandingPage() {
       }
     }
     checkModalFromParams()
-  }, [searchParams, supabase.auth])
+  }, [searchParams, supabase])
+
+  // Reset initialization flag when user logs out
+  useEffect(() => {
+    if (user === null && userInitialized.current) {
+      userInitialized.current = false
+    }
+  }, [user])
 
   const handelSummarizeVideo = async ()=>{
     setloading(true)
@@ -80,7 +90,6 @@ function LandingPage() {
     }
 
     await updateLimit()
-    setloading(false)
     router.push(`/analyze/${extractedUrl}`)
 
 
@@ -99,7 +108,11 @@ function LandingPage() {
     content={
       <div className='flex flex-col gap-10'>
         <p>To increase your limit please signin with Google Account</p>
-        <Button className='w-full'>
+        <Button 
+        onClick={()=>{
+          handelSignin()
+        }}
+        className='w-full'>
           Signin with Google <BiLogoGoogle/>
         </Button>
       </div>
