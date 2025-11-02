@@ -35,9 +35,10 @@ The user will ask you questions about the video content, and you should answer b
 Guidelines:
 - Answer questions accurately based on the transcript
 - If the answer cannot be found in the transcript, politely say Sorry Did not found the context
-- Be concise and helpful
+- Be concise and helpful - keep answers under 200 words when possible
 - You can reference specific topics, concepts, or key points mentioned in the video
 - Keep your answers conversational and friendly
+- IMPORTANT: Keep responses brief and focused. Avoid lengthy explanations unless specifically asked for detailed information.
 
 Video Transcript:
 ${transcriptText}
@@ -46,14 +47,23 @@ User Question: ${message}
 
 Please provide a helpful answer based on the transcript:`;
 
-    const model = genAI.getGenerativeModel({ model: MODEL_NAME });
+    const model = genAI.getGenerativeModel({ 
+      model: MODEL_NAME,
+      generationConfig: {
+        maxOutputTokens: 500, // Limit to ~375-400 words (roughly 500 tokens)
+        temperature: 0.7,
+      },
+    });
 
     const result = await model.generateContent([prompt]);
 
     const response = result.response;
     const answer = response.text();
     
-    return new Response(JSON.stringify({ answer }), { status: 200 });
+    // Additional safety check: truncate if still too long (shouldn't happen with token limit)
+    const truncatedAnswer = answer.length > 800 ? answer.substring(0, 800) + '...' : answer;
+    
+    return new Response(JSON.stringify({ answer: truncatedAnswer }), { status: 200 });
   } catch (error) {
     console.error(error);
     return new Response(JSON.stringify({ error: "Failed to generate response" }), {

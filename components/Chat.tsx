@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input'
 import { TranscriptResponse } from '@/lib/types'
 import axios from 'axios'
 import { Send, Loader2 } from 'lucide-react'
+import ReactMarkdown from 'react-markdown'
 
 interface Message {
   role: 'user' | 'assistant'
@@ -35,10 +36,13 @@ function Chat({ transcript }: ChatProps) {
     const scrollTop = container.scrollTop
 
     // If the user is already near the bottom, scroll to bottom, otherwise do nothing
-    // (100px leeway for "near bottom")
+    // (80px leeway for "near bottom")
     if (scrollHeight - clientHeight - scrollTop < 80) {
-      // Only scroll if overflowed
-      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
+      // Scroll the container itself instead of using scrollIntoView to avoid page scroll
+      container.scrollTo({
+        top: scrollHeight,
+        behavior: "smooth"
+      })
     }
   }, [])
 
@@ -117,7 +121,37 @@ function Chat({ transcript }: ChatProps) {
                     : 'bg-background border'
                 }`}
               >
-                <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                {message.role === 'assistant' ? (
+                  <div className="text-sm">
+                    <ReactMarkdown
+                      components={{
+                        p: ({ children }) => <p className="mb-2 last:mb-0">{children}</p>,
+                        strong: ({ children }) => <strong className="font-semibold">{children}</strong>,
+                        em: ({ children }) => <em className="italic">{children}</em>,
+                        code: ({ children, className }) => {
+                          const isInline = !className
+                          return isInline ? (
+                            <code className="bg-muted px-1 py-0.5 rounded text-xs font-mono">{children}</code>
+                          ) : (
+                            <pre className="bg-muted p-2 rounded text-xs font-mono overflow-x-auto my-2">
+                              <code>{children}</code>
+                            </pre>
+                          )
+                        },
+                        ul: ({ children }) => <ul className="list-disc list-inside my-2 space-y-1">{children}</ul>,
+                        ol: ({ children }) => <ol className="list-decimal list-inside my-2 space-y-1">{children}</ol>,
+                        li: ({ children }) => <li className="ml-2">{children}</li>,
+                        h1: ({ children }) => <h1 className="text-lg font-semibold my-2">{children}</h1>,
+                        h2: ({ children }) => <h2 className="text-base font-semibold my-2">{children}</h2>,
+                        h3: ({ children }) => <h3 className="text-sm font-semibold my-2">{children}</h3>,
+                      }}
+                    >
+                      {message.content}
+                    </ReactMarkdown>
+                  </div>
+                ) : (
+                  <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                )}
               </div>
             </div>
           ))

@@ -135,6 +135,7 @@ function AnalyzeVideo() {
         const seconds = Number(time) / 1000
         if (!playerRef.current) return
         playerRef.current.currentTime = seconds
+        playerRef.current.play()
     }
 
   if (pageState == "loading_transcript") {
