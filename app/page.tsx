@@ -1,7 +1,7 @@
 "use client"
 import { Button } from '@/components/ui/button'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, Suspense } from 'react'
 import { checkUserLimit, extractVideoId, updateLimit } from '@/lib/utils'
 import { toast } from 'sonner'
 import Logo from '@/components/logo'
@@ -212,7 +212,15 @@ function LandingPage() {
   )
 }
 
-export default LandingPage
+function LandingPageWithSuspense() {
+  return (
+    <Suspense fallback={<div className="h-screen flex items-center justify-center">Loading...</div>}>
+      <LandingPage />
+    </Suspense>
+  )
+}
+
+export default LandingPageWithSuspense
 
 
 
