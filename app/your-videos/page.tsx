@@ -4,10 +4,8 @@ import Spinner from '@/components/ui/spinner'
 import VideoCard from '@/components/VideoCard'
 import { createClient } from '@/lib/supabase/client'
 import { VideoData } from '@/lib/types'
-import { User } from '@supabase/supabase-js'
 import { useRouter } from 'next/navigation'
-import React, { useEffect, useState } from 'react'
-import { BiArrowBack } from 'react-icons/bi'
+import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
 
 type VideoResponse = {
@@ -19,35 +17,32 @@ type VideoResponse = {
 
 
 function UserVideos() {
-
-    const [user, setUser] = useState<User | null>(null)
     const [userVideos, setUserVideos] = useState<VideoResponse[] | null>(null)
     const [loading, setLoading] = useState(true)
     const supabase = createClient()
     const router = useRouter()
 
-    const getUser = async() => {
-        const {data: {user}} = await supabase.auth.getUser()
-        if(!user){
-            router.push("/")
-            toast.error("please login to access your videos")
-        }
-        setUser(user)
-        const { data, error } = await supabase
-        .from("video_history")
-        .select(`
-            *,
-            videos(*)
-        `)
-        .eq("userID", user?.id)
-        setUserVideos(data)
-        setLoading(false)
-        
-
-    }
     useEffect(() => {
-        getUser()
-    }, [])
+        const getUserData = async() => {
+            const {data: {user}} = await supabase.auth.getUser()
+            if(!user){
+                router.push("/")
+                toast.error("please login to access your videos")
+            }
+            const { data } = await supabase
+            .from("video_history")
+            .select(`
+                *,
+                videos(*)
+            `)
+            .eq("userID", user?.id)
+            setUserVideos(data)
+            setLoading(false)
+            
+    
+        }
+        getUserData()
+    }, [router, supabase])
 
   return (
     <>

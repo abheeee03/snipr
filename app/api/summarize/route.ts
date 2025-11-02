@@ -1,7 +1,6 @@
 import {
   GoogleGenerativeAI,
 } from "@google/generative-ai";
-import { GoogleAIFileManager } from "@google/generative-ai/server";
 
 const MODEL_NAME = "gemini-2.5-flash-lite";
 const API_KEY = process.env.GEMINI_API_KEY || "";

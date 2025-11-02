@@ -22,14 +22,14 @@ function NavBar({isSigninButtonVisible = true}: {
     const [user, setuser] = useState<User | null>(null)
     const [authScreen, setAuthScreen] = useState<boolean>(false)
     const router = useRouter()
-    const getUser = async ()=>{
-        const {data: {user}} = await supabase.auth.getUser()
-        setuser(user);
-    }
-
+    
     useEffect(() => {
-      getUser()
-    }, [])
+      const getUserData = async ()=>{
+          const {data: {user}} = await supabase.auth.getUser()
+          setuser(user);
+      }
+      getUserData()
+    }, [supabase.auth])
     
 
 

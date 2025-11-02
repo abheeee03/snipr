@@ -31,27 +31,31 @@ function LandingPage() {
   const supabase = createClient()
   const searchParams = useSearchParams()
 
-  const getUser = async ()=>{
+
+
+  useEffect(() => {
+    const getUser = async ()=>{
+    setMounted(true)
     const {data: {user}} = await supabase.auth.getUser()
     if(user){
       setuser(user)
-      
     } else {
       const {data: {user: AnonUser}} = await supabase.auth.signInAnonymously()
       setuser(AnonUser)   
     }
   }
-
-  useEffect(() => {
-    setMounted(true)
     getUser()
-    if(searchParams.get('limit') === 'anon'){
-      setLimitAnonScreen(true)
+    function checkModalFromParams(){
+
+      if(searchParams.get('limit') === 'anon'){
+        setLimitAnonScreen(true)
+      }
+      if(searchParams.get('limit') === 'auth'){
+        setLimitAuthScreen(true)
+      }
     }
-    if(searchParams.get('limit') === 'auth'){
-      setLimitAuthScreen(true)
-    }
-  }, [])
+    checkModalFromParams()
+  }, [searchParams, supabase.auth])
 
   const handelSummarizeVideo = async ()=>{
     setloading(true)
@@ -120,9 +124,6 @@ function LandingPage() {
       <h1 className='text-2xl font-semibold'>Snipr</h1>
       </div>
       <div className="flex items-center justify-center gap-5">
-      <Button className='hidden md:flex' variant={"secondary"}>
-        Download Chrome Extension
-      </Button>
       {
         !user || user.is_anonymous ?
         <Button

@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button'
 import { DirectionAwareTabs } from '@/components/ui/direction-aware-tabs'
 import { PageStateType, TranscriptResponse } from '@/lib/types'
 import axios from 'axios'
-import { useParams, useRouter, useSearchParams } from 'next/navigation'
+import { useParams, useRouter } from 'next/navigation'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { toast } from 'sonner'
 import ReactPlayer from 'react-player'
@@ -12,7 +12,6 @@ import ShimmerText from '@/components/kokonutui/shimmer-text'
 import NavBar from '@/components/nav'
 import FooterComponent from '@/components/footer'
 import { createClient } from '@/lib/supabase/client'
-import { User } from '@supabase/supabase-js'
 import { checkUserLimit } from '@/lib/utils'
 
 type SummaryResponseType = {
@@ -26,12 +25,10 @@ type SummaryResponseType = {
 function AnalyzeVideo() {
   const [transcript, setTranscript] = useState<TranscriptResponse | null>(null)
   const [summary, setSummary] = useState<SummaryResponseType | null>(null)
-  const [error, setError] = useState<string | null>(null)
   const [mounted, setmounted] = useState(false)
   const [pageState, setPageState] = useState<PageStateType>("loading_transcript")
 
   const supabase = createClient()
-  const [user, setUser] = useState<User | null>(null)
 
   const {id} = useParams()
   const router = useRouter()
@@ -42,7 +39,8 @@ function AnalyzeVideo() {
     playerRef.current = player
   }, [])
 
-  const saveVideoToDB = async (
+  const saveVideoToDB = useCallback(
+    async (
     summaryProp: SummaryResponseType,
     transcriptProp: TranscriptResponse,
     userID: string
@@ -58,15 +56,15 @@ function AnalyzeVideo() {
         }
       ])
       .select()
-
-    if (error) {
-      console.log("Error saving video:", error)
-      return
-    }
-
-
-    if (userID && data?.length > 0) {
-      const { data: historyData, error: historyError } = await supabase
+      
+      if (error) {
+        console.log("Error saving video:", error)
+        return
+      }
+      
+      
+      if (userID && data?.length > 0) {
+        await supabase
         .from("video_history")
         .insert([
           {
@@ -75,11 +73,13 @@ function AnalyzeVideo() {
           }
         ])
         .select()
+      }
     }
-  }
-
-  const fetchVideoDetails = async (userID: string) => {
-    try {
+    , [supabase, id])
+    
+  const fetchVideoDetails = useCallback(
+    async (userID: string) => {
+      try {
       const response = await axios.post(`/api/transcribe`, { videoId: id })
       const data = response.data
 
@@ -93,51 +93,50 @@ function AnalyzeVideo() {
       setSummary(summaryData.data)
 
       await saveVideoToDB(summaryData.data, data.transcript, userID)
-
+      
       setPageState("ready")
-    } catch (err) {
+    } catch {
       setPageState("error")
-      setError("Failed to fetch video details try again later.")
       toast.error("Failed to fetch video details")
     }
   }
+  , [id, saveVideoToDB])
 
-  const handleLoadVideo = async () => {
-    const userSession = await supabase.auth.getUser()
-    const currentUser = userSession.data.user 
-    setUser(currentUser)
-    const isLimited = await checkUserLimit()
-    
-    if(!isLimited && currentUser?.is_anonymous){
-      router.push('/?limit=anon')
-    }
-
-    if(!isLimited && !currentUser?.is_anonymous){
-      router.push('/?limit=auth')
-    }
-
-    const { data: DBVideoData } = await supabase
-      .from('videos')
-      .select('*')
-      .eq('videoID', id)
-
-    if (DBVideoData && DBVideoData.length > 0) {
-      setSummary({
-        summary: DBVideoData[0].summary,
-        suggestedClips: JSON.parse(DBVideoData[0].suggested_clips)
-      })
-      setTranscript(JSON.parse(DBVideoData[0].transcript))
-      setPageState("ready")
-      return
-    }
-
-    await fetchVideoDetails(currentUser?.id as string)
-  }
-
+  
   useEffect(() => {
-    setmounted(true)
+    const handleLoadVideo = async () => {
+      setmounted(true)
+      const userSession = await supabase.auth.getUser()
+      const currentUser = userSession.data.user 
+      const isLimited = await checkUserLimit()
+      
+      if(!isLimited && currentUser?.is_anonymous){
+        router.push('/?limit=anon')
+      }
+  
+      if(!isLimited && !currentUser?.is_anonymous){
+        router.push('/?limit=auth')
+      }
+  
+      const { data: DBVideoData } = await supabase
+        .from('videos')
+        .select('*')
+        .eq('videoID', id)
+  
+      if (DBVideoData && DBVideoData.length > 0) {
+        setSummary({
+          summary: DBVideoData[0].summary,
+          suggestedClips: JSON.parse(DBVideoData[0].suggested_clips)
+        })
+        setTranscript(JSON.parse(DBVideoData[0].transcript))
+        setPageState("ready")
+        return
+      }
+  
+      await fetchVideoDetails(currentUser?.id as string)
+    }
     handleLoadVideo()
-  }, [])
+  }, [router, id, supabase, fetchVideoDetails])
 
   if(!mounted) return null;
 
