@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button'
 import { DirectionAwareTabs } from '@/components/ui/direction-aware-tabs'
 import { PageStateType, TranscriptResponse } from '@/lib/types'
 import axios from 'axios'
-import { useParams, useRouter } from 'next/navigation'
+import { useParams, useRouter, useSearchParams } from 'next/navigation'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { toast } from 'sonner'
 import ReactPlayer from 'react-player'
@@ -13,6 +13,7 @@ import NavBar from '@/components/nav'
 import FooterComponent from '@/components/footer'
 import { createClient } from '@/lib/supabase/client'
 import { User } from '@supabase/supabase-js'
+import { checkUserLimit } from '@/lib/utils'
 
 type SummaryResponseType = {
   summary: string;
@@ -32,7 +33,7 @@ function AnalyzeVideo() {
   const supabase = createClient()
   const [user, setUser] = useState<User | null>(null)
 
-  const { id } = useParams()
+  const {id} = useParams()
   const router = useRouter()
 
   const playerRef = useRef<HTMLVideoElement>(null)
@@ -41,7 +42,6 @@ function AnalyzeVideo() {
     playerRef.current = player
   }, [])
 
-  // ✅ FIXED: Use userID directly when inserting history
   const saveVideoToDB = async (
     summaryProp: SummaryResponseType,
     transcriptProp: TranscriptResponse,
@@ -64,7 +64,6 @@ function AnalyzeVideo() {
       return
     }
 
-    console.log("Video saved:", data)
 
     if (userID && data?.length > 0) {
       const { data: historyData, error: historyError } = await supabase
@@ -76,8 +75,6 @@ function AnalyzeVideo() {
           }
         ])
         .select()
-
-      console.log("History:", historyData, historyError)
     }
   }
 
@@ -107,8 +104,17 @@ function AnalyzeVideo() {
 
   const handleLoadVideo = async () => {
     const userSession = await supabase.auth.getUser()
-    const currentUser = userSession.data.user
+    const currentUser = userSession.data.user 
     setUser(currentUser)
+    const isLimited = await checkUserLimit()
+    
+    if(!isLimited && currentUser?.is_anonymous){
+      router.push('/?limit=anon')
+    }
+
+    if(!isLimited && !currentUser?.is_anonymous){
+      router.push('/?limit=auth')
+    }
 
     const { data: DBVideoData } = await supabase
       .from('videos')
@@ -234,7 +240,6 @@ function AnalyzeVideo() {
                     variant={"secondary"}
                     key={index}
                     onClick={() => {
-                      console.log("raw time: ", clip.time);
                       seekPlayer(clip.time)
                     }}
                     className="">

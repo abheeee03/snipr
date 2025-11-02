@@ -1,8 +1,8 @@
 "use client"
 import { Button } from '@/components/ui/button'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { useEffect, useState } from 'react'
-import { extractVideoId } from '@/lib/utils'
+import { checkUserLimit, extractVideoId, updateLimit } from '@/lib/utils'
 import { toast } from 'sonner'
 import Logo from '@/components/logo'
 import { ArrowUpRight } from 'lucide-react'
@@ -14,8 +14,10 @@ import type { User } from '@supabase/supabase-js'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu'
 import { DropdownMenuTrigger } from '@radix-ui/react-dropdown-menu'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { BiSolidVideos } from "react-icons/bi";
+import { BiLogoGoogle, BiSolidVideos } from "react-icons/bi";
 import { CiLogout } from "react-icons/ci";
+import LimitDialog from '@/components/LimitDialog'
+import Spinner from '@/components/ui/spinner'
 
 function LandingPage() {
   const [url, seturl] = useState("")
@@ -23,23 +25,93 @@ function LandingPage() {
   const router = useRouter()
   const [user, setuser] = useState<User | null>(null)
   const [authScreen, setAuthScreen] = useState<boolean>(false)
+  const [limitAnonScreen, setLimitAnonScreen] = useState(false)
+  const [limitAuthScreen, setLimitAuthScreen] = useState(false)
+  const [loading, setloading] = useState(false)
   const supabase = createClient()
+  const searchParams = useSearchParams()
 
   const getUser = async ()=>{
     const {data: {user}} = await supabase.auth.getUser()
-    setuser(user)
+    if(user){
+      setuser(user)
+      
+    } else {
+      const {data: {user: AnonUser}} = await supabase.auth.signInAnonymously()
+      setuser(AnonUser)   
+    }
   }
 
   useEffect(() => {
     setMounted(true)
     getUser()
+    if(searchParams.get('limit') === 'anon'){
+      setLimitAnonScreen(true)
+    }
+    if(searchParams.get('limit') === 'auth'){
+      setLimitAuthScreen(true)
+    }
   }, [])
+
+  const handelSummarizeVideo = async ()=>{
+    setloading(true)
+    const extractedUrl = extractVideoId(url)
+    if(!extractedUrl){
+      toast.error("Please enter a valid Youtube URL")
+      setloading(false)
+      return
+    }
+    const isAllowed = await checkUserLimit()
+
+    if(!isAllowed && user?.is_anonymous){
+      setLimitAnonScreen(true)
+      setloading(false)
+      return
+    }
+
+    if(!isAllowed && !user?.is_anonymous){
+      setLimitAuthScreen(true)
+      setloading(false)
+      return
+    }
+
+    await updateLimit()
+    setloading(false)
+    router.push(`/analyze/${extractedUrl}`)
+
+
+  }
+
   
 
   if(!mounted) return null;
 
   return (
     <>
+    <LimitDialog
+    closeBtnVisible={false}
+    onChange={setLimitAnonScreen}
+    open={limitAnonScreen}
+    content={
+      <div className='flex flex-col gap-10'>
+        <p>To increase your limit please signin with Google Account</p>
+        <Button className='w-full'>
+          Signin with Google <BiLogoGoogle/>
+        </Button>
+      </div>
+    }
+    />
+    <LimitDialog
+    content={
+      <div>
+        <div className='flex flex-col '>
+          <p>We Pay Servers for this and You have used All your credits come back tomorrow for more..</p>
+      </div>
+      </div>
+    }
+    onChange={setLimitAuthScreen}
+    open={limitAuthScreen}
+    />
     <div className="fixed w-full px-5 md:px-10 py-4 flex items-center justify-between">
       <div className="flex items-center justify-center gap-2">
       <Logo
@@ -52,7 +124,7 @@ function LandingPage() {
         Download Chrome Extension
       </Button>
       {
-        !user ?
+        !user || user.is_anonymous ?
         <Button
         onClick={()=>{
           setAuthScreen(!authScreen)
@@ -121,17 +193,13 @@ function LandingPage() {
               placeholder="Enter Youtube URL"
             />
             <Button
-            disabled={url.length != 0 ? false : true}
-          onClick={()=>{
-              const extractedUrl = extractVideoId(url)
-              if(extractedUrl){
-                router.push(`/analyze/${extractedUrl}`)
-              } else {
-                toast.error("Please Enter a valid YoutTube URL")
-              }
-          }}
+            disabled={loading}
+          onClick={handelSummarizeVideo}
           >
-            <ArrowUpRight/>
+            {
+              loading ? <Spinner/> :
+              <ArrowUpRight/>
+            }
           </Button>
             </div>
         </div>

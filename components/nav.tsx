@@ -46,7 +46,7 @@ function NavBar({isSigninButtonVisible = true}: {
                 {isSigninButtonVisible && (
                     <>
                         {
-        !user ?
+        !user || user!.is_anonymous ?
         <Button
         onClick={()=>{
           setAuthScreen(!authScreen)

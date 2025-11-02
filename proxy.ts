@@ -11,21 +11,20 @@ export default async function proxy(req: NextRequest) {
       : (xReal as string | undefined) ||
        
         undefined;
-    console.log(ip);
         
-    // const {success} = await rateLimiter.limit(ip as string);
+    const {success} = await rateLimiter.limit(ip as string);
     
-    // if(!success){        
-    //     return NextResponse.json({
-    //         error: "Too many requests. Please try again later."
-    //     }, {
-    //         status: 429,
-    //     })
-    // }
+    if(!success){        
+        return NextResponse.json({
+            error: "Too many requests. Please try again later."
+        }, {
+            status: 429,
+        })
+    }
 
-    // if(success){
+    if(success){
         NextResponse.next()
-    // }
+    }
 }
 
 export const config = {

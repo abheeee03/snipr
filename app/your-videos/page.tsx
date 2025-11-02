@@ -40,8 +40,6 @@ function UserVideos() {
             videos(*)
         `)
         .eq("userID", user?.id)
-
-        console.log(data);
         setUserVideos(data)
         setLoading(false)
         

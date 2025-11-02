@@ -4,25 +4,13 @@ import { DialogDescription, DialogTitle } from "@radix-ui/react-dialog"
 import { Button } from "./ui/button"
 import { Dialog, DialogContent, DialogHeader } from "./ui/dialog"
 import { FaGoogle } from "react-icons/fa6"
-import { createClient } from "@/lib/supabase/client"
+import { handelSignin } from "@/lib/utils"
 
 
 export default function AuthScreen({open, onOpenChange}: {
     open: boolean,
     onOpenChange: (open: boolean) => void,
 }) {
-
-    const handelSignin = async ()=>{
-        const supabase = createClient()
-        await supabase.auth.signInWithOAuth({
-            provider: 'google',
-            options: {
-                redirectTo: `${window.location.origin}/auth/callback`
-            }
-        })
-    }
-
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
           <DialogContent className="sm:max-w-[425px]">
