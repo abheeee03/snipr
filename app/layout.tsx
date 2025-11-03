@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
 import { Toaster } from 'sonner';
+import { Analytics } from "@vercel/analytics/next"
 
 export const metadata: Metadata = {
   title: "Snipr",
@@ -22,6 +23,7 @@ export default function RootLayout({
       <body
         className={`${satoshi.className} scrollbar-hide antialiased`}
       >
+        <Analytics/>
         <Toaster position="top-right" />        
         {children}
       </body>
