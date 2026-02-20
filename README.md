@@ -82,7 +82,7 @@ snipr/
 
 ## 🌟 Roadmap (what's coming next)
 
-- [ ] AI Chat with videos (in progress)
+- [x] AI Chat with videos
 - [ ] Chrome extension
 - [ ] More video platforms support
 
