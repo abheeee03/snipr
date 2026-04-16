@@ -241,7 +241,6 @@ export default function LandingPageClient({ initialLimit }: LandingPageClientPro
               {isSubmitting ? <Spinner /> : <ArrowUpRight />}
             </Button>
           </div>
-          <p className='text-xs text-muted-foreground'>1 summary/day for guests, 5/day for signed-in users.</p>
         </div>
       </div>
 
